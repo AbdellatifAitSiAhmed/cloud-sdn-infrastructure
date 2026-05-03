@@ -1,0 +1,60 @@
+version: '3.8'
+
+networks:
+  cloud-net:
+    driver: bridge
+
+services:
+
+  # ── Serveurs Web ──────────────────────────
+  web1:
+    image: nginx:alpine
+    container_name: cloud-web1
+    networks:
+      - cloud-net
+
+  web2:
+    image: nginx:alpine
+    container_name: cloud-web2
+    networks:
+      - cloud-net
+
+  # ── Base de données ───────────────────────
+  database:
+    image: postgres:15-alpine
+    container_name: cloud-db
+    environment:
+      POSTGRES_DB:       clouddb
+      POSTGRES_USER:     admin
+      POSTGRES_PASSWORD: cloudpass123
+    networks:
+      - cloud-net
+
+  # ── Cache Redis ───────────────────────────
+  cache:
+    image: redis:7-alpine
+    container_name: cloud-cache
+    networks:
+      - cloud-net
+
+  # ── Monitoring Prometheus ─────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cloud-prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - cloud-net
+
+  # ── Dashboard Grafana ─────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cloud-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    depends_on:
+      - prometheus
+    networks:
+      - cloud-net
